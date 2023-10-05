@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  direction: rtl;
+  @apply font-yekan;
+  background-color: #ebedef;
+}
+
+.h-screen-scroll {
+  height: calc(100vh - 4rem);
+}
+.h-screen-cate{
+  height: 620px;
+
+}
+
+@layer basr {
+  @font-face {
+    font-family: "yekan";
+    src: url(assets/Yekan-Font-3.0/Yekan.ttf);
+  }
+}
+
+@import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
+
+.opacity-img {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.scrollbar::-webkit-scrollbar{
+  display: none;
+}
+
+.p-confirm-dialog-icon{
+  margin-left: 10px;
+  font-size:1.2rem !important;
+}
+.p-datatable .p-datatable-tbody > tr > td {
+  text-align: right;
+}
+
