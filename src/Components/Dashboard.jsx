@@ -12,46 +12,19 @@ import {
   CardFooter,
   Typography,
 } from "@material-tailwind/react";
-
+import getDashboard from '../api/dashboard/getDashboard';
 
 function Dashboard() {
 
   const [dashboard, setDashboard] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    const config = {
-      method: "get",
-      url: 'https://api.hexarz.com/v1/api/manage/blogadmin/blog/dashboard',
-      headers: { api_key: window.localStorage.getItem('token') },
-      data: {}
-    };
-    try {
-      const response = await axios(config);
-      console.log(response)
-      const dashboardObj = {
-        users: response.data.data.users,
-        catas: response.data.data.catas,
-        posts: response.data.data.posts,
-        news: response.data.data.news,
-
-      };
-      setLoading(false);
-      setDashboard(dashboardObj);
-    } catch (error) {
-      // Handle error
-    }
-  };
-
-
-
   useEffect(() => {
-    fetchData();
+    getDashboard().then((res)=>{
+      setDashboard(res.data.data)
+      setLoading(false)
+    })
   }, []);
-
-
-
-
 
   const [sidebarbtn, setSidebarbtn] = useState(false)
 
@@ -64,13 +37,13 @@ function Dashboard() {
     {/* <Header /> */}
     <div className="bg-white w-full border-gray-200 dark:bg-gray-900 h-16 flex justify-between pl-5 items-center">
       <div className='w-2/12 pr-5'>
-        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '2rem' }}></i></button>
+        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '1.7rem' }}></i></button>
       </div>
-      <div className='w-10/12 flex justify-between items-center'>
-        <div>
+      <div className='w-10/12 flex justify-around items-center'>
+        <div className='w-5/12'>
           <p className='font-bold text-lg bg-gradient-to-r from-[#333333] to-blue-500 bg-clip-text text-transparent'>داشبورد</p>
         </div>
-        <div>
+        <div className='w-5/12'>
           {/* <i className="pi pi-user  text-blue-500" style={{ fontSize: '2rem' }}></i> */}
         </div>
 

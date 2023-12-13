@@ -20,4 +20,5 @@ const GetCategory = (active) => {
       });
   });
 };
+
 export default GetCategory;

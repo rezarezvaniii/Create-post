@@ -7,7 +7,10 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import axios from 'axios';
 import { Spinner } from "@material-tailwind/react";
+import addCategory from '../api/category/addCategory';
 import { ArrowRightIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import editeCategory from '../api/category/editeCategory';
+import deleteCategory from '../api/category/deleteCategory';
 import {
   Typography,
   Card,
@@ -21,18 +24,26 @@ import {
   IconButton,
   Input
 } from "@material-tailwind/react";
+import { Alert } from "@material-tailwind/react";
 import moment from "moment-jalaali";
-import GetCategory from "../api/GetCategory"
+import GetCategory from "../api/category/GetCategory"
 // import { CustomerService } from './service/CustomerService';
 function Category() {
   // pageination body
   const [open, setOpen] = React.useState(false);
+  const [errorhandling , setErrorhandling] = useState(false)
   const handleOpen = () => setOpen(!open);
   const [openedit, setOpenedit] = React.useState(false);
+  const [responsed, setResponsed] = useState([]);
+  const [loadingall, setLoadingall] = useState(true);
   const handleOpenedit = () => setOpenedit(!openedit);
   const [idedit, setIdedit] = useState(null)
   const [editnamepost, setEditnamepost] = useState(null);
   const [editlogopost, setLogopost] = useState(null)
+  const [successdel, setSuccessdel] = useState(false)
+  const [successadd, setSuccessadd] = useState(false)
+  const [successedit, setSuccessedit] = useState(false)
+  console.log(successdel)
   function handleeditnamepost(event) {
     setEditnamepost(event.target.value);
   }
@@ -42,66 +53,91 @@ function Category() {
   }
 
   async function edititem() {
-    const config = {
-      method: "PATCH",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/catagories",
-      headers: { api_key: window.localStorage.getItem('token') },
-      data: {
-        name: editnamepost,
-        logo: editlogopost,
-        cata_id: idedit,
-      }
-    };
+    setLoadingspiner(true)
 
-    try {
-      await axios(config).then(async (res) => {
-        console.log("res:", res)
-        await fetchListusers().then(() => { setOpenedit(!openedit) })
+
+    editeCategory(editnamepost, editlogopost, idedit)
+      .then(async (res1) => {
+
+        await GetCategory(active).then((res1) => {
+
+          setLoadingall(true);
+          setResponsed(res1.data.data.catagories)
+          setOpenedit(!openedit) || setLoadingspiner(false)
+        })
+        setLoadingall(false)
+        setSuccessedit(true)
+
+        setTimeout(() => {
+          setSuccessedit(false)
+        }, 2000);
+
       })
+      .catch((error) => {
+        console.log(error)
+        setOpenedit(!openedit)
+        setErrorhandling(true)
 
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
+      });
 
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
+    // try {
+    //   await axios(config).then(async (res) => {
+    //     await GetCategory(active).then((res1) => {
+
+    //       setLoadingall(true);
+    //       setResponsed(res1.data.data.catagories)
+    //       setOpenedit(!openedit) || setLoadingspiner(false)
+    //     })
+    //     setLoadingall(false)
+
+    //   })
+
+    // } catch (error) {
+    //   console.log(error.toString());
+    //   // Handle error
+    // }
 
 
   }
 
 
 
-
-
-
   const [opendelete, setOpendelete] = React.useState(false);
-
   const handleOpendelete = () => setOpendelete(!opendelete);
-
   const [iddelete, setIddelete] = useState(null)
 
   async function deletitem() {
     setLoadingspiner(true)
 
-    const config = {
-      method: "DELETE",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/catagories",
-      headers: { api_key: window.localStorage.getItem('token') },
-      params: {
-        cata_id: iddelete,
+    deleteCategory(iddelete)
+      .then(async (res1) => {
 
-      }
-    };
+        await GetCategory(active).then((res1) => {
 
-    try {
-      await axios(config).then(async (res) => {
-        await fetchListusers().then(() => { setOpendelete(!opendelete) || setLoadingspiner(false) })
+          setLoadingall(true);
+          setResponsed(res1.data.data.catagories)
+          setOpendelete(!opendelete) || setLoadingspiner(false)
+        })
+        setLoadingall(false)
+        setSuccessdel(true)
+
+        setTimeout(() => {
+          setSuccessdel(false)
+        }, 2000);
+
       })
+      .catch((error) => {
+        console.log(error)
+        setOpendelete(!opendelete)
+        setErrorhandling(true)
 
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
-
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
+      });
   }
 
 
@@ -132,27 +168,31 @@ function Category() {
     setPostname(null);
 
 
-    const config = {
-      method: "post",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/catagories",
-      headers: { api_key: window.localStorage.getItem('token') },
-      data: {
-        name: postname,
-        logo: catepost,
-      }
-    };
+    addCategory(postname, catepost)
+      .then(async (res1) => {
+        await GetCategory(active).then((res) => {
+          setLoadingall(true);
+          setResponsed(res.data.data.catagories)
+          setOpen(!open) || setLoadingspiner(false)
+          setLoadingall(false)
+          setSuccessadd(true)
 
-    try {
-      await axios(config).then(async (res) => {
-        await fetchListusers().then(() => { setOpen(!open) || setLoadingspiner(false) })
+          setTimeout(() => {
+            setSuccessadd(false)
+          }, 2000);
+        })
       })
+      .catch((error) => {
+        console.log(error)
 
+        setOpen(!open)
+        setErrorhandling(true)
 
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
 
+      });
   };
 
   function handlepostname(event) {
@@ -165,7 +205,7 @@ function Category() {
 
 
   const [active, setActive] = React.useState(1);
-  const [countPage , setCountpage] = useState(null)
+  const [countPage, setCountpage] = useState(null)
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -176,10 +216,6 @@ function Category() {
   };
 
 
-
-
-
-  console.log(countPage)
   const getItemProps = (index) =>
   ({
     variant: active === index ? "filled" : "text",
@@ -201,45 +237,20 @@ function Category() {
   };
 
 
-  const [responsed, setResponsed] = useState([]);
-  const [loadingall, setLoadingall] = useState(false);
-  console.log(loadingall)
-  const fetchListusers = async () => {
-    // const url = `https://api.hexarz.com/v1/api/manage/admin/users/list?page=${first}` ;
-    const config = {
-      method: "get",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/catagories",
-      headers: { api_key: window.localStorage.getItem('token') },
-      params: {
-        page: active,
-        limit: 10,
-      }
-    };
-
-    try {
-      setLoadingall(true)
-      const response = await axios(config);
-      setResponsed(response.data.data.catagories)
-      setCountpage(Math.ceil(response.data.data.count/10))
-      setLoadingall(false)
-
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
-  };
-
 
   useEffect(() => {
 
-    fetchListusers();
+    // fetchListusers();
 
-    // GetCategory(active).then(res => {
-    //   setResponsed(res.data.data.catagories)
-    // }).catch(err => {
-    //   console.log(err.toString());
+    GetCategory(active).then(res => {
+      setResponsed(res.data.data.catagories)
+      setCountpage(Math.ceil(res.data.data.count / 10))
+      setLoadingall(false)
 
-    // })
+    }).catch(err => {
+      console.log(err.toString());
+
+    })
   }, [active]);
 
 
@@ -252,14 +263,14 @@ function Category() {
 
     <div className="bg-white w-full border-gray-200 dark:bg-gray-900 h-16 flex justify-between pl-5 items-center">
       <div className='w-2/12 pr-5'>
-        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '2rem' }}></i></button>
+        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '1.7rem' }}></i></button>
 
       </div>
-      <div className='w-10/12 flex justify-between items-center'>
-        <div className='w-5/12'>
+      <div className='w-10/12 flex justify-around items-center'>
+        <div className='w-6/12'>
           <p className='font-bold text-lg bg-gradient-to-r from-[#333333] to-blue-500 bg-clip-text text-transparent'>دسته بندی ها</p>
         </div>
-        <div>
+        <div className='w-4/12'>
           {/* <i className="pi pi-user  text-blue-500" style={{ fontSize: '2rem' }}></i> */}
         </div>
 
@@ -269,22 +280,19 @@ function Category() {
 
     <div className='flex '>
       <Sidebar sidebarbtn={sidebarbtn} />
-
       <div className={`${sidebarbtn === true ? "w-full" : "w-10/12"} bg-[#EBEDEF] scrollbar transition-all overflow-y-auto h-screen-scroll`}>
-
-
         <button onClick={handleOpen} className='w-36 mt-4 mr-4 font-bold text-base bg-blue-500 flex justify-center items-center gap-1 text-white py-2 rounded-md' variant="gradient">
           دسته بندی جدید <i className="custom-target-icon pi pi-plus-circle p-text-secondary p-overlay-badge"
             style={{ color: 'white', fontSize: '1.3rem' }}></i>
         </button>
 
         <Dialog open={open} handler={handleOpen}>
-          <DialogHeader className='font-yekan'>ایجاد پست</DialogHeader>
+          <DialogHeader className='font-yekan'>ایجاد دسته بندی</DialogHeader>
           <DialogBody className='flex flex-col gap-5 font-yekan' divider>
-            <Input className='font-yekan' value={catepost} onChange={handlepostcate} label="نام پست" />
-            <Input className='font-yekan' value={postname} onChange={handlepostname} label='دسته بندی' />
+            <Input className='font-yekan' value={postname} onChange={handlepostname} label='نام پست' />
+            <Input className='font-yekan' value={catepost} onChange={handlepostcate} label="لوگو" />
           </DialogBody>
-          <DialogFooter>
+          <DialogFooter className='flex gap-3'>
             <Button
               variant="text"
               color="red"
@@ -309,7 +317,7 @@ function Category() {
         <Dialog open={opendelete} handler={handleOpendelete}>
           <DialogHeader className='font-yekan flex justify-center'>آیا از حذف اطمینان دارید؟</DialogHeader>
 
-          <DialogFooter className='flex justify-center'>
+          <DialogFooter className='flex justify-center gap-3'>
             <Button
               variant="text"
               color="red"
@@ -338,7 +346,7 @@ function Category() {
             <Input className='font-yekan' value={editlogopost} onChange={handleeditlogopost} label='دسته بندی' />
           </DialogBody>
 
-          <DialogFooter className='flex justify-center'>
+          <DialogFooter className='flex justify-center gap-3 '>
             <Button
               variant="text"
               color="red"
@@ -357,26 +365,30 @@ function Category() {
         </Dialog>
 
 
+        {
+          successdel ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="red">حذف با موفقیت انجام شد.</Alert>
+            : null
+        }
+        {
+          successedit ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="green">ویرایش با موفقیت انجام شد.</Alert>
+            : null
+        }
+        {
+          successadd ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="green">پست با موفقیت ایجاد شد.</Alert>
+            : null
+        }
+        {
+          errorhandling ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="red">عملیات با خطا مواجه شد</Alert>
+            : null
+        }
 
 
-        {/* <DataTable className='flex justify-center' dir='ltr' value={data} tableStyle={{ minWidth: '50rem' }}>
-                        <Column className='' field="fuck" dir='ltr' header="Code"></Column>
-                        <Column className='' dir='ltr' field="name" header="Name"></Column>
-                        <Column className='' dir='ltr' field="categoeis" header="Category"></Column>
-                        <Column className='' dir='ltr' field="hello" header="Quantity"></Column>
-                        </DataTable>
-                      */}
 
 
-        {/* <div className="card" dir='rtl'>
-                    <DataTable dir='rtl' value={data} paginator rows={5} rowsPerPageOptions={[5, 10, 25, 50]} tableStyle={{ minWidth: '50rem' }}>
-                    <Column className='classmargine' dir='rtl' field="name" header="نام" style={{ width: '25%' }}></Column>
-                    <Column className='classmargine' dir='rtl' field="fuck" header="نام خانوادگی" style={{ width: '25%' }}></Column>
-                    <Column className='classmargine' dir='rtl' field="categoeis" header="شرکت" style={{ width: '25%' }}></Column>
-                    <Column className='classmargine' dir='rtl' field="hello" header="تاریخ" style={{ width: '25%' }}></Column>
-                    <Column className='classmargine' dir='rtl' header="تاریخ" style={{ width: '25%' }}></Column>
-                    </DataTable>
-                  </div> */}
 
 
         <Card className="overflow-hidden scrollbar w-11/12 mt-5 mx-auto">
@@ -398,11 +410,6 @@ function Category() {
             </div>
 
           </CardHeader>
-
-
-
-
-
 
           <CardBody className="relative h-screen-cate px-0 pt-0 pb-2">
             {
@@ -457,9 +464,7 @@ function Category() {
                               </td>
                               <td className={className}>
                                 <div className="w-10/12 flex justify-center">
-
                                   {name}
-
                                 </div>
                               </td>
                               <td className={className}>
@@ -497,9 +502,6 @@ function Category() {
                                   <button className="rounded-md text-white bg-[#53AD57] w-16 font-medium p-2">آنبلاک</button> */}
                                 </div>
                               </td>
-
-
-
                             </tr>
                           )
                         })
@@ -522,55 +524,36 @@ function Category() {
           </div>
         </Card>
 
-
-
-
-
-
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="text"
-            className="flex items-center gap-2"
+            className="flex items-center font-yekan text-sm gap-2"
             onClick={prev}
             disabled={active === 1}
           >
-            <ArrowRightIcon strokeWidth={2} className="h-4 w-4" /> Previous
+            <ArrowRightIcon strokeWidth={2} className="h-4 w-4" /> قبل
           </Button>
           <div className="flex items-center gap-2 my-4">
 
-            {/* <IconButton {...getItemProps(1)}>1</IconButton>
-            <IconButton {...getItemProps(2)}>2</IconButton>
-            <IconButton {...getItemProps(3)}>3</IconButton>
-            <IconButton {...getItemProps(4)}>4</IconButton>
-            <IconButton {...getItemProps(5)}>5</IconButton> */}
-           
             {getPageNumbers()}
 
           </div>
           <Button
             variant="text"
-            className="flex items-center gap-2"
+            className="flex items-center text-sm font-yekan gap-2"
             onClick={next}
             disabled={active === 5}
           >
-            Next
+            بعد
             <ArrowLeftIcon strokeWidth={2} className="h-4 w-4" />
           </Button>
         </div>
-
-
-
-
-
-
-
-
-
-
-
       </div>
     </div>
   </>);
 }
+
+
+
 
 export default Category;

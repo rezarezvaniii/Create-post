@@ -12,12 +12,14 @@ import { Toast } from 'primereact/toast';
 import { Input } from '@material-tailwind/react';
 import { Skeleton } from 'primereact/skeleton';
 import { useNavigate } from 'react-router-dom';
+import { Alert } from "@material-tailwind/react";
 import { Tooltip } from 'primereact/tooltip';
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import 'primeicons/primeicons.css';
 import { Select, Option } from "@material-tailwind/react";
 import { Spinner } from "@material-tailwind/react";
 import { ArrowRightIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import addPosts from '../api/posts/addPost';
 import {
   Button,
   IconButton,
@@ -26,17 +28,21 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
-
-
+import editePost from '../api/posts/editePost';
+import getPosts from '../api/posts/getPosts';
+import removePost from '../api/posts/removePost';
 
 function Posts() {
-
+  const [errorhandling, setErrorhandling] = useState(false)
   const [loadingspiner, setLoadingspiner] = useState(false)
   const [selectcate, setSelectcate] = useState(null)
   const [openedit, setOpenedit] = React.useState(false);
   const handleOpenedit = () => setOpenedit(!openedit);
   const [idedit, setIdedit] = useState(null)
   const [editnamepost, setEditnamepost] = useState(null);
+  const [successdel, setSuccessdel] = useState(false)
+  const [successadd, setSuccessadd] = useState(false)
+  const [successedit, setSuccessedit] = useState(false)
   const handleselectedit = (_id) => {
     setSelectcate(_id)
   }
@@ -45,28 +51,37 @@ function Posts() {
   }
   async function edititem() {
     setLoadingspiner(true);
-    const config = {
-      method: "PATCH",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/posts",
-      headers: { api_key: window.localStorage.getItem('token') },
-      data: {
-        post_id: idedit,
-        cata_id: selectcate,
-        title: editnamepost,
-        description: "",
-        text: "",
-        banner: "https://www.koalablockchain.com/wp-content/uploads/2020/03/image1-home5.png",
-        external_link: ""
-      }
-    };
-    try {
-      await axios(config).then(async (res) => {
-        await fetchgetpost().then(() => { setOpenedit(!openedit) || setLoadingspiner(false) })
+
+    editePost(idedit, selectcate, editnamepost)
+      .then(async (res) => {
+        await getPosts(active)
+          .then(res => {
+            setOpenedit(!openedit) || setLoadingspiner(false);
+            setPosts(res.data.data.Posts);
+          })
+        setSuccessedit(true)
+
+        setTimeout(() => {
+          setSuccessedit(false)
+        }, 2000);
       })
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
+      .catch((error) => {
+        console.log(error.massage)
+        setOpenedit(!openedit)
+        setErrorhandling(true)
+
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
+      })
+    // try {
+    //   await axios(config).then(async (res) => {
+    //     await fetchgetpost().then(() => { setOpenedit(!openedit) || setLoadingspiner(false) })
+    //   })
+    // } catch (error) {
+    //   console.log(error.toString());
+    //   // Handle error
+    // }
   }
   const [opendelete, setOpendelete] = React.useState(false);
   const [iddelete, setIddelete] = useState(null)
@@ -75,24 +90,42 @@ function Posts() {
   async function deletitem() {
     setLoadingspiner(true)
 
-    const config = {
-      method: "DELETE",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/posts",
-      headers: { api_key: window.localStorage.getItem('token') },
-      params: {
-        post_id: iddelete,
+    removePost(iddelete)
+      .then(async (res) => {
+        await getPosts(active)
+          .then(res => {
+            setPosts(res.data.data.Posts);
+            handleOpendelete() || setLoadingspiner(false)
 
-      }
-    };
-    try {
-      await axios(config).then(async (res) => {
-        await fetchgetpost().then(() => { handleOpendelete() || setLoadingspiner(false) })
+          })
+        setSuccessdel(true)
+
+        setTimeout(() => {
+          setSuccessdel(false)
+        }, 2000);
       })
 
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
+      .catch((error) => {
+        console.log(error)
+
+        handleOpendelete()
+        setErrorhandling(true)
+
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
+
+      });
+
+    // try {
+    //   await axios(config).then(async (res) => {
+    //     await fetchgetpost().then(() => { handleOpendelete() || setLoadingspiner(false) })
+    //   })
+
+    // } catch (error) {
+    //   console.log(error.toString());
+    //   // Handle error
+    // }
 
   }
   const [open, setOpen] = React.useState(false);
@@ -107,30 +140,47 @@ function Posts() {
   async function handlecreatepost() {
     setLoadingspiner(true)
 
-    const config = {
-      method: "POST",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/posts",
-      headers: { api_key: window.localStorage.getItem('token') },
-      data: {
-        cata_id: selectcate,
-        title: postname,
-        text: "",
-        description: "test",
-        banner: "https://www.koalablockchain.com/wp-content/uploads/2020/03/image1-home5.png"
-      }
-    };
-    try {
-      await axios(config).then(async (res) => {
-        await fetchgetpost().then(() => { setOpen(!open) || setLoadingspiner(false) })
+    addPosts(selectcate, postname)
+      .then(async (res) => {
+        await getPosts(active)
+          .then(res => {
+            setOpen(!open) || setLoadingspiner(false)
+            setPosts(res.data.data.Posts);
+            setLodingscalet(false)
+            setSuccessadd(true)
+
+            setTimeout(() => {
+              setSuccessadd(false)
+            }, 2000);
+          })
+
+          .then(() => { setOpen(!open) || setLoadingspiner(false) })
       })
-    } catch (error) {
-      console.log(error.toString());
-      // Handle error
-    }
+
+      .catch((error) => {
+        console.log(error)
+        setOpen(!open)
+        setErrorhandling(true)
+
+        setTimeout(() => {
+          setErrorhandling(false)
+        }, 2000);
+      });
+
+    // try {
+    //   await axios(config).then(async (res) => {
+    //     await fetchgetpost().then(() => { setOpen(!open) || setLoadingspiner(false) })
+    //   })
+    // } catch (error) {
+    //   console.log(error.toString());
+    //   // Handle error
+    // }
   };
 
+
+
   const [loadingscalet, setLodingscalet] = useState(true);
-  const [posts, setPosts] = useState([0, 1, 2, 3, 4, 5])
+  const [posts, setPosts] = useState([0, 1, 2])
   const [postcateselect, setPostcateselect] = useState([]);
 
   const fetchpostid = async () => {
@@ -155,8 +205,7 @@ function Posts() {
 
 
   const [active, setActive] = React.useState(1);
-  const [countPage , setCountpage] = useState(null)
-  console.log(countPage)
+  const [countPage, setCountpage] = useState(null)
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -187,20 +236,11 @@ function Posts() {
   };
 
   const fetchgetpost = async () => {
-    const config = {
-      method: "GET",
-      url: "https://api.hexarz.com/v1/api/manage/blogadmin/blog/posts",
-      headers: { api_key: window.localStorage.getItem('token') },
-      params: {
-        page: 1,
-        limit: 10,
-      }
-    };
 
     try {
       const response = await axios(config);
       setPosts(response.data.data.Posts);
-      setCountpage(Math.ceil(response.data.data.count/10))
+      setCountpage(Math.ceil(response.data.data.count / 10))
       setLodingscalet(false)
     } catch (error) {
       console.log(error.toString());
@@ -210,9 +250,18 @@ function Posts() {
 
   useEffect(() => {
 
-    fetchgetpost();
+    getPosts(active)
+      .then(res => {
+        setPosts(res.data.data.Posts);
+        setCountpage(Math.ceil(res.data.data.count / 10))
+        setLodingscalet(false)
+      }).catch(err => {
+        console.log(err.toString());
+
+      })
+
     fetchpostid();
-  }, []);
+  }, [active]);
 
   const [sidebarbtn, setSidebarbtn] = useState(false)
   function handleSidebar() {
@@ -222,7 +271,7 @@ function Posts() {
   return (<>
     <div className="bg-white w-full border-gray-200 dark:bg-gray-900 h-16 flex justify-between pl-5 items-center">
       <div className='w-2/12 pr-5'>
-        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '2rem' }}></i></button>
+        <button onClick={handleSidebar}><i className="pi pi-align-right" style={{ fontSize: '1.7rem' }}></i></button>
 
       </div>
       <div className='w-10/12 flex justify-around items-center'>
@@ -256,7 +305,7 @@ function Posts() {
               <Select variant="static" label="دسته بندی">
                 {
                   postcateselect.map(({ name, _id }) =>
-                    <Option onClick={() => handleselectcatepost(_id)}>{name}</Option>
+                    <Option className='font-yekan' onClick={() => handleselectcatepost(_id)}>{name}</Option>
                   )
                 }
               </Select>
@@ -279,7 +328,6 @@ function Posts() {
             </Button>
           </DialogFooter>
         </Dialog>
-
         {/* delete Dialog in body post */}
         <Dialog open={opendelete} handler={handleOpendelete}>
           <DialogHeader className='font-yekan flex justify-center'>آیا از حذف اطمینان دارید؟</DialogHeader>
@@ -313,7 +361,7 @@ function Posts() {
               <Select variant="static" label="دسته بندی">
                 {
                   postcateselect.map(({ name, _id }) =>
-                    <Option onClick={() => handleselectcatepost(_id)}>{name}</Option>
+                    <Option className='font-yekan' onClick={() => handleselectcatepost(_id)}>{name}</Option>
                   )
                 }
               </Select>
@@ -338,6 +386,27 @@ function Posts() {
           </DialogFooter>
         </Dialog>
 
+        {
+          successdel ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="red">حذف با موفقیت انجام شد.</Alert>
+            : null
+        }
+        {
+          successedit ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="green">ویرایش با موفقیت انجام شد.</Alert>
+            : null
+        }
+        {
+          successadd ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="green">پست با موفقیت ایجاد شد.</Alert>
+            : null
+        }
+        {
+          errorhandling ?
+            <Alert className='animate-wiggle absolute  transition-all w-fit left-0 top-1 z-50' color="red">عملیات با خطا مواجه شد</Alert>
+            : null
+        }
+
         <div className='flex items-center justify-center w-full '>
           <div className='flex flex-wrap gap-10 w-11/12 '>
             {
@@ -360,21 +429,21 @@ function Posts() {
                   </div>)
                   :
                   (<div key={index} className='w-[30.54%] h-[450px] mt-8 relative bg-white rounded-lg flex justify-center '>
-                    <div className='absolute w-[85%] h-[85%] bg-black rounded-xl -top-10'>
+                    <div className='absolute w-[85%] h-[80%] rounded-xl -top-10'>
                       <img src={banner} className='w-full h-full' alt="" />
                     </div>
-                    <div className='h-[22%] w-full justify-between absolute px-4 flex gap-1 bottom-0'>
-                      <div className='flex flex-col mt-3 gap-2 w-1/2'>
+                    <div className='h-[28%] w-full  absolute px-4 flex flex-col gap-1 bottom-0'>
+                      <div className='flex flex-col mt-3 gap-2 w-full '>
                         <p className='flex text-black gap-2 mr-3 font-semibold text-base '>نام:<span className='font-normal'>{title}</span></p>
-                        <p className='flex text-black gap-2 mr-3 font-semibold flex-col text-base '>دسته بندی:
+                        <p className='flex text-black gap-2 mr-3 font-semibold text-base '>دسته بندی:
                           <span className='font-normal'>{catagorie}</span></p>
                       </div>
-                      <div className='flex justify-end gap-2 mb-4 items-end w-1/2 '>
+                      <div className='flex justify-end gap-2 mb-4 items-end w-full '>
                         <Link to={`/home/posts/edit/${_id}`}>
                           <button className='w-8 h-8 flex justify-center items-center rounded-full transition duration-700 ease-in-out hover:bg-blue-gray-100 text-blue-500'>
                             <Tooltip target=".custom-target-icon" />
                             <i className="custom-target-icon pi pi-file-edit text-blue-500 p-text-secondary p-overlay-badge"
-                              data-pr-tooltip="ویرایش"
+                              data-pr-tooltip="ویرایش محتوا"
                               data-pr-position="right"
                               data-pr-at="right+5 top"
                               data-pr-my="left center-2"
@@ -410,22 +479,22 @@ function Posts() {
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="text"
-            className="flex items-center gap-2"
+            className="flex items-center font-yekan text-sm gap-2"
             onClick={prev}
             disabled={active === 1}
           >
-            <ArrowRightIcon strokeWidth={2} className="h-4 w-4" /> Previous
+            <ArrowRightIcon strokeWidth={2} className="h-4 w-4" /> قبل
           </Button>
           <div className="flex items-center gap-2 my-4">
             {getPageNumbers()}
           </div>
           <Button
             variant="text"
-            className="flex items-center gap-2"
+            className="flex items-center text-sm font-yekan gap-2"
             onClick={next}
             disabled={active === 5}
           >
-            Next
+            بعد
             <ArrowLeftIcon strokeWidth={2} className="h-4 w-4" />
           </Button>
         </div>
